@@ -63,8 +63,8 @@ kafka_genconsumers = [
 
 children = [
   # OTHER STUFF,
-  QuiqupElixirKafka.KafkaMonitor,
-  {QuiqupElixirKafka.ConsumerSupervisor, kafka_genconsumers}
+  worker(QuiqupElixirKafka.KafkaMonitor, [[]]),
+  worker(QuiqupElixirKafka.ConsumerSupervisor, [kafka_genconsumers]),
 ]
 
 opts = [strategy: :one_for_one, name: MyApp.Supervisor]
