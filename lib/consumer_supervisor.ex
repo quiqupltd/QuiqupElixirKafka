@@ -18,7 +18,14 @@ defmodule QuiqupElixirKafka.ConsumerSupervisor do
 
   @impl true
   def init(child_specs) do
-    DynamicSupervisor.start_link(strategy: :one_for_one, name: @dynamic_supervisor)
+    import Supervisor.Spec
+
+    {kafka_ex_con_group, _start_link, args} = hd(child_specs).start
+
+    children = [
+      supervisor(kafka_ex_con_group, args)
+    ]
+    Supervisor.start_link(children, strategy: :simple_one_for_one, name: @dynamic_supervisor)
 
     for child_spec <- child_specs do
       Process.send(self(), {:start_child, child_spec}, [])
@@ -29,7 +36,7 @@ defmodule QuiqupElixirKafka.ConsumerSupervisor do
 
   @impl true
   def handle_info({:start_child, child_spec}, %State{refs: refs}) do
-    case DynamicSupervisor.start_child(@dynamic_supervisor, child_spec) do
+    case Supervisor.start_child(@dynamic_supervisor, child_spec) do
       {:ok, pid} ->
         Logger.info("#{__MODULE__} monitoring #{inspect(child_spec)} at #{inspect(pid)}")
         ref = Process.monitor(pid)
