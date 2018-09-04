@@ -37,7 +37,7 @@ defmodule QuiqupElixirKafka.ConsumerSupervisor do
   @impl true
   def handle_info({:start_child, child_spec}, %State{refs: refs}) do
     Logger.info("#{__MODULE__} Starting child consumer:#{inspect(child_spec)}")
-    case Supervisor.start_child(@dynamic_supervisor, child_spec) do
+    case Supervisor.start_child(@dynamic_supervisor, []) do
       {:ok, pid} ->
         Logger.info("#{__MODULE__} monitoring #{inspect(child_spec)} at #{inspect(pid)}")
         ref = Process.monitor(pid)
