@@ -23,7 +23,7 @@ defmodule QuiqupElixirKafka.ConsumerSupervisor do
     {kafka_ex_con_group, _start_link, args} = hd(child_specs).start
 
     children = [
-      supervisor(kafka_ex_con_group, args)
+      supervisor(kafka_ex_con_group, args, restart: :transient)
     ]
     Supervisor.start_link(children, strategy: :simple_one_for_one, name: @dynamic_supervisor)
 
