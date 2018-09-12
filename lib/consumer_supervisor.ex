@@ -23,7 +23,7 @@ defmodule QuiqupElixirKafka.ConsumerSupervisor do
     {kafka_ex_con_group, _start_link, args} = hd(child_specs).start
 
     children = [
-      supervisor(kafka_ex_con_group, args)
+      supervisor(kafka_ex_con_group, args, restart: :transient)
     ]
     Supervisor.start_link(children, strategy: :simple_one_for_one, name: @dynamic_supervisor)
 
@@ -36,7 +36,8 @@ defmodule QuiqupElixirKafka.ConsumerSupervisor do
 
   @impl true
   def handle_info({:start_child, child_spec}, %State{refs: refs}) do
-    case Supervisor.start_child(@dynamic_supervisor, child_spec) do
+    Logger.info("#{__MODULE__} Starting child consumer:#{inspect(child_spec)}")
+    case Supervisor.start_child(@dynamic_supervisor, []) do
       {:ok, pid} ->
         Logger.info("#{__MODULE__} monitoring #{inspect(child_spec)} at #{inspect(pid)}")
         ref = Process.monitor(pid)
