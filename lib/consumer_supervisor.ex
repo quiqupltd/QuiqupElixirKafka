@@ -18,10 +18,18 @@ defmodule QuiqupElixirKafka.ConsumerSupervisor do
 
   @impl true
   def init(child_specs) do
-    System.version() |> version_init(child_specs)
+    dynamic_supervisor_present()
+    |> version_init(child_specs)
   end
 
-  defp version_init("1.4.5", child_specs)
+  defp dynamic_supervisor_present() do
+    case function_exported?(DynamicSupervisor, :__info__, 1) do
+      true -> :has_dynamic_supervisor
+      false -> :without_dynamic_supervisor
+    end
+  end
+
+  defp version_init(:without_dynamic_supervisor, child_specs)
     import Supervisor.Spec
 
     {kafka_ex_con_group, _start_link, args} = hd(child_specs).start
@@ -38,7 +46,7 @@ defmodule QuiqupElixirKafka.ConsumerSupervisor do
     {:ok, %State{}}
   end
 
-  defp version_init("1.6.0", child_specs) do
+  defp version_init(:has_dynamic_supervisor, child_specs) do
     DynamicSupervisor.start_link(strategy: :one_for_one, name: @dynamic_supervisor)
 
     for child_spec <- child_specs do
