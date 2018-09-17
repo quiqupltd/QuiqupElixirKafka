@@ -5,7 +5,7 @@ defmodule QuiqupElixirKafka.ConsumerSupervisor do
 
   defmodule State do
     @moduledoc false
-    defstruct refs: %{}
+    defstruct refs: %{}, dynamic_supervisor?: false
   end
 
   use GenServer
@@ -53,13 +53,13 @@ defmodule QuiqupElixirKafka.ConsumerSupervisor do
       Process.send(self(), {:start_child, child_spec}, [])
     end
 
-    {:ok, %State{}}
+    {:ok, %State{dynamic_supervisor?: true}}
   end
 
   @impl true
-  def handle_info({:start_child, child_spec}, %State{refs: refs}) do
+  def handle_info({:start_child, child_spec}, %State{refs: refs, dynamic_supervisor?: dynamic_supervisor?}) do
     Logger.info("#{__MODULE__} Starting child consumer:#{inspect(child_spec)}")
-    case System.version() |> version_case(child_spec) do
+    case version_case(dynamic_supervisor?, child_spec) do
       {:ok, pid} ->
         Logger.info("#{__MODULE__} monitoring #{inspect(child_spec)} at #{inspect(pid)}")
         ref = Process.monitor(pid)
@@ -80,8 +80,8 @@ defmodule QuiqupElixirKafka.ConsumerSupervisor do
     end
   end
 
-  defp version_case("1.4.5", _child_spec), do: Supervisor.start_child(@dynamic_supervisor, [])
-  defp version_case("1.6.0", child_spec), do: DynamicSupervisor.start_child(@dynamic_supervisor, child_spec)
+  defp version_case(false, _child_spec), do: Supervisor.start_child(@dynamic_supervisor, [])
+  defp version_case(true, child_spec), do: DynamicSupervisor.start_child(@dynamic_supervisor, child_spec)
 
   @impl true
   def handle_info({:DOWN, ref, :process, _pid, _reason}, %State{refs: refs}) do
