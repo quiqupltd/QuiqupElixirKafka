@@ -29,7 +29,7 @@ defmodule QuiqupElixirKafka.ConsumerSupervisor do
     end
   end
 
-  defp version_init(:without_dynamic_supervisor, child_specs)
+  defp version_init(:without_dynamic_supervisor, child_specs) do
     import Supervisor.Spec
 
     {kafka_ex_con_group, _start_link, args} = hd(child_specs).start
