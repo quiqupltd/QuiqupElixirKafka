@@ -61,8 +61,14 @@ kafka_genconsumers = [
   }
 ]
 
+# Elixir 1.4 style:
 children = [
-  # OTHER STUFF,
+  worker(QuiqupElixirKafka.KafkaMonitor, [[]]),
+  worker(QuiqupElixirKafka.ConsumerSupervisor, [kafka_genconsumers]),
+]
+
+# Elixir 1.6 style:
+children = [
   QuiqupElixirKafka.KafkaMonitor,
   {QuiqupElixirKafka.ConsumerSupervisor, kafka_genconsumers}
 ]
